@@ -116,22 +116,17 @@ func (e *Exporter) Collect(c chan<- prometheus.Metric) {
 			if d, ok := infos[inst.Key]; ok {
 				c <- prometheus.MustNewConstMetric(d, prometheus.GaugeValue, inst.Value)
 			} else if inst.Key == "squid_info" {
-				var labelsKeys, labelsValues []string
-
-				infoMetricName := prometheus.BuildFQName(namespace, "info", "service")
+				constLabels := make(prometheus.Labels)
 
 				for _, vl := range inst.VarLabels {
-					labelsKeys = append(labelsKeys, vl.Key)
-					labelsValues = append(labelsValues, vl.Value)
+					constLabels[vl.Key] = vl.Value
 				}
 
 				infoDesc := prometheus.NewDesc(
-					infoMetricName,
+					prometheus.BuildFQName(namespace, "info", "service"),
 					"Metrics as string from info on cache_object",
-					labelsKeys,
-					nil,
-				)
-				c <- prometheus.MustNewConstMetric(infoDesc, prometheus.GaugeValue, inst.Value, labelsValues...)
+					nil, constLabels)
+				c <- prometheus.MustNewConstMetric(infoDesc, prometheus.GaugeValue, inst.Value)
 			}
 		}
 	} else {
