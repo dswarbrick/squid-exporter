@@ -42,10 +42,11 @@ func main() {
 		Port:        cfg.SquidPort,
 		Login:       cfg.Login,
 		Password:    cfg.Password,
-		Labels:      prometheus.Labels(cfg.Labels),
 		ProxyHeader: proxyHeader,
 	})
-	prometheus.MustRegister(e)
+
+	// Wrap DefaultRegisterer to add our custom labels to all metrics exposed by the collector.
+	prometheus.WrapRegistererWith(prometheus.Labels(cfg.Labels), prometheus.DefaultRegisterer).MustRegister(e)
 
 	if cfg.Pidfile != "" {
 		procExporter := collectors.NewProcessCollector(collectors.ProcessCollectorOpts{

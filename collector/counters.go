@@ -46,7 +46,7 @@ var squidCounters = []squidCounter{
 	{"swap", "files_cleaned", "total", "The number of orphaned cache files removed by the periodic cleanup procedure"},
 }
 
-func generateSquidCounters(labels prometheus.Labels) descMap {
+func generateSquidCounters() descMap {
 	counters := descMap{}
 
 	for _, counter := range squidCounters {
@@ -55,11 +55,7 @@ func generateSquidCounters(labels prometheus.Labels) descMap {
 			strings.ReplaceAll(counter.Section, ".", "_"),
 			counter.Counter+"_"+counter.Suffix)
 
-		counters[key] = prometheus.NewDesc(
-			name,
-			counter.Description,
-			nil, labels,
-		)
+		counters[key] = prometheus.NewDesc(name, counter.Description, nil, nil)
 	}
 
 	return counters

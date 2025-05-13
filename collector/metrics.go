@@ -35,18 +35,17 @@ type CollectorConfig struct {
 	Port        int
 	Login       string
 	Password    string
-	Labels      prometheus.Labels
 	ProxyHeader string
 }
 
 // New initializes a new exporter.
 func New(c *CollectorConfig) *Exporter {
-	counters = generateSquidCounters(c.Labels)
+	counters = generateSquidCounters()
 	if ExtractServiceTimes {
-		serviceTimes = generateSquidServiceTimes(c.Labels)
+		serviceTimes = generateSquidServiceTimes()
 	}
 
-	infos = generateSquidInfos(c.Labels)
+	infos = generateSquidInfos()
 
 	return &Exporter{
 		NewCacheObjectClient(fmt.Sprintf("http://%s:%d/squid-internal-mgr/", c.Hostname, c.Port), c.Login, c.Password, c.ProxyHeader),
