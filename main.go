@@ -42,7 +42,7 @@ func main() {
 		Port:        cfg.SquidPort,
 		Login:       cfg.Login,
 		Password:    cfg.Password,
-		Labels:      cfg.Labels,
+		Labels:      prometheus.Labels(cfg.Labels),
 		ProxyHeader: proxyHeader,
 	})
 	prometheus.MustRegister(e)

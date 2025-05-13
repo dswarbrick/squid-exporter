@@ -61,7 +61,7 @@ var squidInfos = []squidInfo{
 	{"on_disk_objects", "", "number"},
 }
 
-func generateSquidInfos(labels []string) descMap {
+func generateSquidInfos(labels prometheus.Labels) descMap {
 	infos := descMap{}
 
 	for _, info := range squidInfos {
@@ -82,7 +82,7 @@ func generateSquidInfos(labels []string) descMap {
 		infos[key] = prometheus.NewDesc(
 			name,
 			description,
-			labels, nil,
+			nil, labels,
 		)
 	}
 

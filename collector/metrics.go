@@ -6,8 +6,6 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
-
-	"github.com/boynux/squid-exporter/config"
 )
 
 type descMap map[string]*prometheus.Desc
@@ -29,7 +27,6 @@ type Exporter struct {
 	client   SquidClient
 	hostname string
 	port     int
-	labels   config.Labels
 	up       *prometheus.GaugeVec
 }
 
@@ -38,24 +35,23 @@ type CollectorConfig struct {
 	Port        int
 	Login       string
 	Password    string
-	Labels      config.Labels
+	Labels      prometheus.Labels
 	ProxyHeader string
 }
 
 // New initializes a new exporter.
 func New(c *CollectorConfig) *Exporter {
-	counters = generateSquidCounters(c.Labels.Keys)
+	counters = generateSquidCounters(c.Labels)
 	if ExtractServiceTimes {
-		serviceTimes = generateSquidServiceTimes(c.Labels.Keys)
+		serviceTimes = generateSquidServiceTimes(c.Labels)
 	}
 
-	infos = generateSquidInfos(c.Labels.Keys)
+	infos = generateSquidInfos(c.Labels)
 
 	return &Exporter{
 		NewCacheObjectClient(fmt.Sprintf("http://%s:%d/squid-internal-mgr/", c.Hostname, c.Port), c.Login, c.Password, c.ProxyHeader),
 		c.Hostname,
 		c.Port,
-		c.Labels,
 		prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: namespace,
 			Name:      "up",
@@ -92,7 +88,7 @@ func (e *Exporter) Collect(c chan<- prometheus.Metric) {
 		e.up.With(prometheus.Labels{"host": e.hostname}).Set(1)
 		for _, inst := range insts {
 			if d, ok := counters[inst.Key]; ok {
-				c <- prometheus.MustNewConstMetric(d, prometheus.CounterValue, inst.Value, e.labels.Values...)
+				c <- prometheus.MustNewConstMetric(d, prometheus.CounterValue, inst.Value)
 			}
 		}
 	} else {
@@ -106,7 +102,7 @@ func (e *Exporter) Collect(c chan<- prometheus.Metric) {
 		if err == nil {
 			for _, inst := range insts {
 				if d, ok := serviceTimes[inst.Key]; ok {
-					c <- prometheus.MustNewConstMetric(d, prometheus.GaugeValue, inst.Value, e.labels.Values...)
+					c <- prometheus.MustNewConstMetric(d, prometheus.GaugeValue, inst.Value)
 				}
 			}
 		} else {
@@ -118,7 +114,7 @@ func (e *Exporter) Collect(c chan<- prometheus.Metric) {
 	if err == nil {
 		for _, inst := range insts {
 			if d, ok := infos[inst.Key]; ok {
-				c <- prometheus.MustNewConstMetric(d, prometheus.GaugeValue, inst.Value, e.labels.Values...)
+				c <- prometheus.MustNewConstMetric(d, prometheus.GaugeValue, inst.Value)
 			} else if inst.Key == "squid_info" {
 				var labelsKeys, labelsValues []string
 

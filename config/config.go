@@ -38,10 +38,7 @@ var (
 	VersionFlag *bool
 )
 
-type Labels struct {
-	Keys   []string
-	Values []string
-}
+type Labels map[string]string
 
 // Config configurations for exporter.
 type Config struct {
@@ -62,7 +59,7 @@ type Config struct {
 
 // NewConfig creates a new config object from command line args.
 func NewConfig() *Config {
-	c := &Config{}
+	c := &Config{Labels: make(Labels)}
 
 	flag.StringVar(&c.ListenAddress, "listen",
 		loadEnvStringVar(squidExporterListenKey, defaultListenAddress), "Address and Port to bind exporter, in host:port format")
@@ -134,29 +131,26 @@ func loadEnvIntVar(key string, def int) int {
 	return def
 }
 
-func (l *Labels) String() string {
+func (l Labels) String() string {
 	var lbls []string
-	for i := range l.Keys {
-		lbls = append(lbls, l.Keys[i]+"="+l.Values[i])
+	for k, v := range l {
+		lbls = append(lbls, k+"="+v)
 	}
 
 	return strings.Join(lbls, ", ")
 }
 
-func (l *Labels) Set(value string) error {
+func (l Labels) Set(value string) error {
 	args := strings.Split(value, "=")
 
-	if len(args) != 2 || len(args[1]) < 1 {
+	if len(args) != 2 {
 		return errors.New("label must be in 'key=value' format")
 	}
 
-	for _, key := range l.Keys {
-		if key == args[0] {
-			return fmt.Errorf("labels must be distinct; found duplicate key %q", args[0])
-		}
+	if _, exists := l[args[0]]; exists {
+		return fmt.Errorf("labels must be distinct; found duplicate key %q", args[0])
 	}
-	l.Keys = append(l.Keys, args[0])
-	l.Values = append(l.Values, args[1])
+	l[args[0]] = args[1]
 
 	return nil
 }

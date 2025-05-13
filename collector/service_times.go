@@ -112,7 +112,7 @@ var squidServiceTimes = []squidServiceTime{
 	{"DNS_Lookups", "", "95", "Service Time Percentiles 5min"},
 }
 
-func generateSquidServiceTimes(labels []string) descMap {
+func generateSquidServiceTimes(labels prometheus.Labels) descMap {
 	serviceTimes := descMap{}
 
 	for _, serviceTime := range squidServiceTimes {
@@ -133,7 +133,7 @@ func generateSquidServiceTimes(labels []string) descMap {
 		serviceTimes[key] = prometheus.NewDesc(
 			name,
 			serviceTime.Description,
-			labels, nil,
+			nil, labels,
 		)
 	}
 
